@@ -2,7 +2,7 @@
 
 #define DEBUG
 
-#define PLUGIN_AUTHOR "EinSteini"
+#define PLUGIN_AUTHOR "EinSteinicsgo"
 #define PLUGIN_VERSION "1.00"
 
 #include <sourcemod>
@@ -80,7 +80,7 @@ public Action GameInvis(int client, int args)
 	
 	CS_SwitchTeam(target_id, CS_TEAM_T);
 	
-	CS_SetClientClanTag(target_id, "Invisible Man");
+	CS_SetClientClanTag(target_id, "Invisible Woman");
 	
 	for (int i = 1; i < sizeof(ga_cNames)-1; i++)
 	{
