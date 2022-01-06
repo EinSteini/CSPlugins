@@ -60,7 +60,7 @@ public Action Command_Start(int client, int args)
 
 public Action GameInvis(int client, int args)
 {
-	static char invis_body[64] = "ent_fire !self addoutput \"rendermode 6\"";
+	static char invis_body[64] = "ent_fire !self addoutput \"rendermode 10\"";
 	
 	char name[32];
 	GetCmdArg(2, name, sizeof(name));
