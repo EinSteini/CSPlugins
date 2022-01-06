@@ -80,7 +80,9 @@ public Action GameInvis(int client, int args)
 	
 	CS_SwitchTeam(target_id, CS_TEAM_T);
 	
-	CS_SetClientClanTag(target_id, "Invisible Woman");
+
+	CS_SetClientClanTag(target_id, "Invisible ");
+
 	
 	for (int i = 1; i < sizeof(ga_cNames)-1; i++)
 	{
