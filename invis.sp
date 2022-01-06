@@ -105,6 +105,7 @@ public void OnTakeDamage(int victim){
 }
 
 public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast){
+	ServerCommand("say %d", GetClientOfUserId(event.GetInt("userid")));
 	//MakeVisible(GetClientOfUserId(event.GetInt("userid")), 3);
 }
 
