@@ -21,8 +21,8 @@ bool isSurf = false;
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_jnormal", normal, "cmd");
-	RegConsoleCmd("sm_jArmsrace", armsrace, "cmd");
-	RegConsoleCmd("sm_jWingman", wingman, "cmd");
+
+	
 	RegConsoleCmd("sm_jSurf", surf, "cmd");
 }
 
@@ -47,16 +47,10 @@ public Action normal(int client, int args)
 	char gamemode[32];
 	GetCmdArg(3, gamemode, 32);
 	
-	ServerCommand("changelevel %s %s %s",mapName,gametype,gamemode);
+	ServerCommand("changelevel %s",mapName);
+	ServerCommand("game_mode %s;game_type %s",gamemode,gametype);
 	
-	return Plugin_Handled;
-}
-public Action armsrace(int client, int args)
-{
-	return Plugin_Handled;
-}
-public Action wingman(int client, int args)
-{
+	
 	return Plugin_Handled;
 }
 public Action surf(int client, int args)
@@ -66,6 +60,7 @@ public Action surf(int client, int args)
 		changeParamsToSurf();
 		isSurf = true;
 	}
+	ServerCommand("host_workshop_map 2117837517");
 	return Plugin_Handled;
 }
 
