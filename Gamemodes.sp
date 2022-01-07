@@ -47,7 +47,7 @@ public Action normal(int client, int args)
 	char gamemode[32];
 	GetCmdArg(3, gamemode, 32);
 	
-	ServerCommand("map %s %s %s",mapName,gametype,gamemode);
+	ServerCommand("changelevel %s %s %s",mapName,gametype,gamemode);
 	
 	return Plugin_Handled;
 }
