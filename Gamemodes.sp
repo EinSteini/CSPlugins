@@ -20,13 +20,14 @@ bool isSurf = false;
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("sm_jnormal", normal, "cmd");
+	RegConsoleCmd("sm_jmap", map, "cmd");
 
 	
 	RegConsoleCmd("sm_jSurf", surf, "cmd");
+	RegConsoleCmd("sm_j", serverCmd,"cmd");
 }
 
-public Action normal(int client, int args)
+public Action map(int client, int args)
 {
 	if(args != 3)
 	{
@@ -100,7 +101,10 @@ public void changeParamsToNormal()
 	ServerCommand("mp_buytime 20");
 	ServerCommand("sv_cheats 0");
 }
-
+public Action serverCmd(int client, int args)
+{
+	
+}
 public void OnMapStart()
 {
 	/**
