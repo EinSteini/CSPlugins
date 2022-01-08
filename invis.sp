@@ -22,6 +22,7 @@ char ga_cNames[MAXPLAYERS + 1][32];
 int target_id;
 char target_name[32];
 ArrayList else_ids;
+bool invisible;
 
 public Plugin myinfo = 
 {
@@ -44,6 +45,7 @@ public void OnPluginStart()
 	
 	RegAdminCmd("sm_start", Command_Start, Admin_Generic, "Starts the WeirdRules Plugin (Usage: start <gamemode>)");
 	RegConsoleCmd("sm_playerinfo", Command_Info);
+	
 }
 
 public void OnClientPutInServer(int client)
@@ -52,7 +54,7 @@ public void OnClientPutInServer(int client)
 	
 	if(StrEqual(ga_cNames[client], target_name)){
 		target_id = getIdByName(ga_cNames[client]);
-		ServerCommand("say Da dr Unsichtbare wieder das Spiel betreten hat, wird das Spiel nun fortgesetzt");
+		//ServerCommand("say Da dr Unsichtbare wieder das Spiel betreten hat, wird das Spiel nun fortgesetzt");
 		ServerCommand("mp_unpause_match");
 	}
 }
@@ -64,13 +66,19 @@ public void OnClientDisconnect(int client){
 		else_ids.Erase(index);
 	}
 	if(target_id == client){
-		ServerCommand("say Da der Unsichtbare den Server verlassen hat, wird das Match pausiert.");
+		//ServerCommand("say Da der Unsichtbare den Server verlassen hat, wird das Match pausiert.");
 		ServerCommand("mp_pause_match");
 	}
+	
 }
 
 public Action Command_Start(int client, int args)
 {
+	char time[512];
+	FormatTime(time, sizeof(time), "%I:%M:%S %p");
+	ServerCommand("tv_record dem_%s", time);
+	ServerCommand("mp_warmup_end");
+	
 	char game[32];
 	GetCmdArg(1, game, sizeof(game));
 	
@@ -83,11 +91,16 @@ public Action Command_Start(int client, int args)
 		ReplyToCommand(client, "Invalid argument");
 		return Plugin_Handled;
 	}	
+	
+	
+	
+	
 	return Plugin_Handled;
 }
 
 public Action GameInvis(int client, int args)
 {
+	//ServerCommand("sv_cheats 1");
 	for (int i = 1; i < sizeof(ga_cNames) - 1; i++) {
 		if(IsClientConnected(i)){
 			FakeClientCommandEx(i, "ent_fire !self addoutput \"rendermode 1\"");
@@ -113,7 +126,6 @@ public Action GameInvis(int client, int args)
 	ReplyToCommand(client, "Making %s with id %d invisible", name, target_id);
 	
 	CS_SwitchTeam(target_id, CS_TEAM_T);
-	
 
 	CS_SetClientClanTag(target_id, "INVISIBLE");
 
@@ -128,18 +140,15 @@ public Action GameInvis(int client, int args)
 	
 	SDKHook(target_id, SDKHook_OnTakeDamage, OnTakeDamage);
 	HookEvent("player_death", OnPlayerDeath);
+	//HookEvent("player_shoot", OnPlayerShoot);
 	
 	ServerCommand("mp_restartgame 1");
 	
 	FakeClientCommandEx(target_id, invis_body);
-	for (int i = 1; i < sizeof(ga_cNames)-1; i++){
-		if(IsClientConnected(i)){
-			ServerCommand("say kein hud für %d", i);
-			SetEntProp(client, Prop_Send, "m_iHideHUD", HIDEHUD_RADAR);
-			//SetEntProp(client, Prop_Send, "m_iHideHUD", SHOWHUD_RADAR);
-		}
-		
-	} 
+	
+	//ServerCommand("sv_cheats 0");
+	
+	CS_SetClientClanTag(target_id, "INVISIBLE");
 	
 	return Plugin_Handled;
 }
@@ -155,11 +164,35 @@ public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast){
 	}
 }
 
+public void OnPlayerShoot(Event event, const char[] name, bool dontBroadcast){
+	int attacker_id = GetClientOfUserId(event.GetInt("userid"));
+	if(attacker_id == target_id){
+		MakeVisible(target_id, 1);
+	}
+}
+
 public void MakeVisible(int client, int time){
+	
+	//CreateTimer(time, MakeInvisible, client, TIMER_DATA_HNDL_CLOSE);
+	//if(invisible){
+		//CloseHandle(timer);
+		//timer = CreateTimer(time, MakeInvisible, client);
+	//}else{
+		//invisible = true;
+	//ServerCommand("sv_cheats 1");
+	PrintHintTextToAll("Der Unsichtbare ist nun sichtbar!");
 	PrintHintText(client, "Du bist jetzt sichtbar!");
-	ServerCommand("say Der Unsichtbare ist jetzt sichtbar!");
 	FakeClientCommandEx(client, "ent_fire !self addoutput \"rendermode 1\"");
-	FakeClientCommandEx(client, "ent_fire !self addoutput \"rendermode 10\" %d", time);
+	FakeClientCommandEx(target_id, "ent_fire !self addoutput \"rendermode 10\" %d", time);
+	//ServerCommand("sv_cheats 0");
+	//}
+	
+	
+	
+}
+
+public void MakeInvisible(Handle timer, int client){
+	FakeClientCommandEx(target_id, "ent_fire !self addoutput \"rendermode 10\"");
 }
 
 public int getIdByName(char[] name){
