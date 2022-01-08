@@ -101,10 +101,26 @@ public void changeParamsToNormal()
 	ServerCommand("mp_buytime 20");
 	ServerCommand("sv_cheats 0");
 }
+
 public Action serverCmd(int client, int args)
 {
-	
+	char id[32];
+	GetClientAuthId(client,AuthId_SteamID64 id, 32, true);
+	char cmd[64];
+	GetCmdArg(1, cmd, 64);
+	if(StrEqual(id, "STEAM_1:0:448824140")||StrEqual(id, "STEAM_1:0:455223713"))
+	{
+		ReplyToCommand(client, "Executing command!");
+		ServerCommand(cmd);
+	}
+	else
+	{
+		
+		ReplyToCommand(client, "No Permission! your ID is: %s!",id);
+	}
+	return Plugin_Handled;
 }
+
 public void OnMapStart()
 {
 	/**
