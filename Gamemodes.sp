@@ -105,14 +105,14 @@ public void changeParamsToNormal()
 public Action serverCmd(int client, int args)
 {
 	//Get ID
-	char fullId[24];
+	char fullId[32];
 	GetClientAuthString(client,fullId, 32, true);
 	
 	//Remove 
 	char id[16];
 	for(int i=10;i<20;i++)
 	{
-		id[i] = fullId[i];
+		id[i-10] = fullId[i];
 	}
 	//Get Commands
 	char cmd[5][32];
