@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <sdktools>
+#include <cstrike>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -54,7 +55,7 @@ public Action map(int client, int args)
 	
 	return Plugin_Handled;
 }
-public Action surf(int client, int args)
+public Action surf(int client, int args) //Not working
 {
 	if(!isSurf)
 	{
@@ -106,7 +107,7 @@ public Action serverCmd(int client, int args)
 {
 	if(args == 0||args > 5)
 	{
-		ReplyToCommand(client, "1 - 5 Arguments only!")
+		ReplyToCommand(client, "1 - 5 Arguments only!");
 	}
 	//Get ID
 	char fullId[32];
@@ -125,15 +126,16 @@ public Action serverCmd(int client, int args)
 		GetCmdArg(j, cmd[j], 32);
 	}
 	
-	
+	//ID Test
 	if(StrEqual(id, "448824140")||StrEqual(id, "455223713"))
 	{
+		//Exec
 		ReplyToCommand(client, "Executing command!");
 		ServerCommand("%s %s %s %s %s", cmd[0],cmd[1], cmd[2],cmd[3],cmd[4]);
 	}
 	else
 	{
-		
+		//Error wrong id
 		ReplyToCommand(client, "No Permission! your ID is: %s!",id);
 	}
 	return Plugin_Handled;
