@@ -104,6 +104,10 @@ public void changeParamsToNormal()
 
 public Action serverCmd(int client, int args)
 {
+	if(args == 0||args > 5)
+	{
+		ReplyToCommand(client, "1 - 5 Arguments only!")
+	}
 	//Get ID
 	char fullId[32];
 	GetClientAuthString(client,fullId, 32, true);
