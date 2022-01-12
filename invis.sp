@@ -5,9 +5,6 @@
 #define PLUGIN_AUTHOR "EinSteini"
 #define PLUGIN_VERSION "1.00"
 
-#define HIDEHUD_RADAR 1 << 12
-#define SHOWHUD_RADAR 1 >> 12
-
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
@@ -44,7 +41,7 @@ public void OnPluginStart()
 	else_ids = new ArrayList(1,0);
 	
 	RegAdminCmd("sm_start", Command_Start, Admin_Generic, "Starts the WeirdRules Plugin (Usage: start <gamemode>)");
-	RegConsoleCmd("sm_playerinfo", Command_Info);
+	//RegConsoleCmd("sm_playerinfo", Command_Info);
 	
 }
 
