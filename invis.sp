@@ -51,7 +51,7 @@ public void OnClientPutInServer(int client)
 	
 	if(StrEqual(ga_cNames[client], target_name)){
 		target_id = getIdByName(ga_cNames[client]);
-		//ServerCommand("say Da dr Unsichtbare wieder das Spiel betreten hat, wird das Spiel nun fortgesetzt");
+		//ServerCommand("say Da der Unsichtbare wieder das Spiel betreten hat, wird das Spiel nun fortgesetzt");
 		ServerCommand("mp_unpause_match");
 	}
 }

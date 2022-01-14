@@ -24,6 +24,7 @@ enum Gamemode{
 	standard,
 	invis
 }
+Gamemode pluginMode = standard;
 
 char ga_cGamemodes[1][2][64] =  { 
 	{ "Invis", "1v5, where the solo player is invisible" } 
@@ -54,7 +55,7 @@ public void OnPluginStart()
 	RegAdminCmd("mode", GameMode, ADMFLAG_GENERIC);
 }
 
-public void OnClientConnected(int client)
+public void OnClientPostAdminCheck(int client)
 {
 	clientsIngame[client] = true;
 }
@@ -62,6 +63,21 @@ public void OnClientConnected(int client)
 public void OnClientDisconnect(int client)
 {
 	clientsIngame[client] = false;
+}
+
+public void OnTakeDamage(int client){
+	if(pluginMode == invis){
+		MakePlayerVisible(client, 3);
+	}
+}
+
+public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast){
+	if(pluginMode == invis){
+		int attacker_id = GetClientOfUserId(event.GetInt("attacker"));
+		if(attacker_id == playerInvis){
+			MakePlayerVisible(playerInvis, 3);
+		}
+	}
 }
 
 public Action PlayerInfo(int client, int args)
@@ -88,8 +104,9 @@ public Action PlayerInfo(int client, int args)
 
 public Action GameMode(int client, int args)
 {
-	Gamemode mode;
 	ResetValues(); 
+	
+	ServerCommand("mp_warmup_end");
 	
 	char game[16];
 	GetCmdArg(1, game, sizeof(game));
@@ -128,12 +145,39 @@ public Action GameInvis(int client, int args)
 	
 	ReplyToCommand(client, "Making %s (ID: %d) invisible", invisName, invisId);
 	
-	ServerCommand("sv_cheats 1");
+	MakePlayerInvisible(playerInvis); 
 	
+	CS_SwitchTeam(playerInvis, CS_TEAM_T);
+	
+	for (int i = 1; i < sizeof(clientsIngame); i++)
+	{
+		if(clientsIngame[i] && !(IsClientSourceTV(i) || IsClientReplay(i)))
+		{
+			CS_SwitchTeam(i, CS_TEAM_CT);
+		}
+	}
+	
+	SDKHook(playerInvis, SDKHook_OnTakeDamage, OnTakeDamage);
+	HookEvent("player_death", OnPlayerDeath);
+	
+	CS_SetClientClanTag(playerInvis, "INVISIBLE");
+	
+	ServerCommand("mp_restartgame 1");
+	
+	CS_SetClientClanTag(playerInvis, "INVISIBLE");
+	
+	
+	return Plugin_Handled;
 }
 
 public void ResetValues(){
 	playerInvis = -1;
+	
+	for (int i = 1; i < sizeof(clientsIngame) - 1; i++) {
+		if(clientsIngame[i]){
+			FakeClientCommandEx(i, "ent_fire !self addoutput \"rendermode 1\"");
+		}
+	}
 }
 
 public int GetClientID(char name[33])
@@ -152,4 +196,17 @@ public int GetClientID(char name[33])
 		}
 	} 
 	return -1;
+}
+
+public void MakePlayerInvisible(int player_id)
+{
+	ServerCommand("sv_cheats 1");
+	
+	FakeClientCommandEx(player_id, "ent_fire !self addoutput \"rendermode 10\"");
+	
+	ServerCommand("sv_cheats 0");
+}
+public void MakePlayerVisible(int player_id, int time)
+{
+	//...
 }
