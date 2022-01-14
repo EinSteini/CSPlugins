@@ -18,7 +18,8 @@ bool clientsIngame[MAXPLAYERS + 1];
 
 //Globals Invis
 int playerInvis = -1;
-
+Handle visTimer;
+bool bugfix;
 
 enum Gamemode{
 	standard,
@@ -53,6 +54,30 @@ public void OnPluginStart()
 	
 	RegAdminCmd("sm_mode", GameMode, ADMFLAG_GENERIC);
 	RegAdminCmd("mode", GameMode, ADMFLAG_GENERIC);
+	
+	RegConsoleCmd("timertest", TimerTest);
+}
+
+public Action TimerTest(int client, int args){
+	CreateTimer(1.0, Timer_PrintMessageFiveTimes, _, TIMER_REPEAT);
+}
+
+public Action Timer_PrintMessageFiveTimes(Handle timer)
+{
+    // Create a global variable visible only in the local scope (this function).
+    static int numPrinted = 10;
+ 
+    if (numPrinted == 0) 
+    {
+    	ServerCommand("say Countdown finished!");
+        numPrinted = 10;
+        return Plugin_Stop;
+    }
+ 
+    ServerCommand("say Countdown: %d", numPrinted);
+    numPrinted--;
+ 
+    return Plugin_Continue;
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -67,7 +92,7 @@ public void OnClientDisconnect(int client)
 
 public void OnTakeDamage(int client){
 	if(pluginMode == invis){
-		MakePlayerVisible(client, 3);
+		TimedVisible(client);
 	}
 }
 
@@ -75,7 +100,7 @@ public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast){
 	if(pluginMode == invis){
 		int attacker_id = GetClientOfUserId(event.GetInt("attacker"));
 		if(attacker_id == playerInvis){
-			MakePlayerVisible(playerInvis, 3);
+			TimedVisible(playerInvis);
 		}
 	}
 }
@@ -131,6 +156,8 @@ public Action GameMode(int client, int args)
 
 public Action GameInvis(int client, int args)
 {
+	pluginMode = invis;
+	
 	char invisName[33];
 	GetCmdArg(2, invisName, sizeof(invisName));
 	
@@ -147,8 +174,6 @@ public Action GameInvis(int client, int args)
 	
 	MakePlayerInvisible(playerInvis); 
 	
-	CS_SwitchTeam(playerInvis, CS_TEAM_T);
-	
 	for (int i = 1; i < sizeof(clientsIngame); i++)
 	{
 		if(clientsIngame[i] && !(IsClientSourceTV(i) || IsClientReplay(i)))
@@ -156,6 +181,8 @@ public Action GameInvis(int client, int args)
 			CS_SwitchTeam(i, CS_TEAM_CT);
 		}
 	}
+	
+	CS_SwitchTeam(playerInvis, CS_TEAM_T);
 	
 	SDKHook(playerInvis, SDKHook_OnTakeDamage, OnTakeDamage);
 	HookEvent("player_death", OnPlayerDeath);
@@ -172,11 +199,17 @@ public Action GameInvis(int client, int args)
 
 public void ResetValues(){
 	playerInvis = -1;
+	pluginMode = standard;
 	
 	for (int i = 1; i < sizeof(clientsIngame) - 1; i++) {
 		if(clientsIngame[i]){
 			FakeClientCommandEx(i, "ent_fire !self addoutput \"rendermode 1\"");
 		}
+	}
+	
+	if(visTimer != null)
+	{
+		delete visTimer;
 	}
 }
 
@@ -198,15 +231,74 @@ public int GetClientID(char name[33])
 	return -1;
 }
 
-public void MakePlayerInvisible(int player_id)
-{
-	ServerCommand("sv_cheats 1");
+public void TimedVisible(int player_id){
+	if(visTimer != null)
+	{
+		delete visTimer;
+		visTimer = null;
+		
+		bugfix = true;
+	}
 	
-	FakeClientCommandEx(player_id, "ent_fire !self addoutput \"rendermode 10\"");
+	MakePlayerVisible(player_id);
+	visTimer = CreateTimer(1.0, Timer_Visible, _, TIMER_REPEAT);
+	bugfix = false;
 	
-	ServerCommand("sv_cheats 0");
+	int sec = 3;
+	
+	for (int i = 1; i < sizeof(clientsIngame); i++)
+    {
+	    if(clientsIngame[i])
+	    {
+	    	PrintHintText(i, "Der Unsichtbare ist nun sichtbar für: %d Sekunden", sec);
+	    }
+   	}
+   	PrintHintText(playerInvis, "Du bist nun nun sichtbar für: %d Sekunden", sec);
 }
-public void MakePlayerVisible(int player_id, int time)
+
+public Action Timer_Visible(Handle timer)
 {
-	//...
+    static int sec = 2;
+    
+    if (sec <= 0 && !bugfix) 
+    {
+    	MakePlayerInvisible(playerInvis);
+    	
+    	for (int i = 1; i < sizeof(clientsIngame); i++)
+    	{
+    		if(clientsIngame[i])
+    		{
+    			PrintHintText(i, "Der Unsichtbare ist nun wieder unsichtbar");
+    		}
+   		}
+   		
+   		PrintHintText(playerInvis, "Du bist nun wieder unsichtbar!");
+    	
+		sec = 2;
+        visTimer = null;
+        
+        return Plugin_Stop;
+    }
+ 
+    for (int i = 1; i < sizeof(clientsIngame); i++)
+    {
+	    if(clientsIngame[i])
+	    {
+	    	PrintHintText(i, "Der Unsichtbare ist nun sichtbar für: %d Sekunden", sec);
+	    }
+   	}
+   	PrintHintText(playerInvis, "Du bist nun nun sichtbar für: %d Sekunden", sec);
+   	
+   	sec--;
+ 
+	return Plugin_Continue;
+}
+
+public void MakePlayerInvisible(int player_id)
+{	
+	FakeClientCommandEx(player_id, "ent_fire !self addoutput \"rendermode 10\"");
+}
+public void MakePlayerVisible(int player_id)
+{
+	FakeClientCommandEx(player_id, "ent_fire !self addoutput \"rendermode 1\"");
 }
