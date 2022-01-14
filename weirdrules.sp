@@ -19,7 +19,7 @@ bool clientsIngame[MAXPLAYERS + 1];
 //Globals Invis
 int playerInvis = -1;
 Handle visTimer;
-bool bugfix;
+int sec = 3;
 
 enum Gamemode{
 	standard,
@@ -200,6 +200,7 @@ public Action GameInvis(int client, int args)
 public void ResetValues(){
 	playerInvis = -1;
 	pluginMode = standard;
+	sec = 3;
 	
 	for (int i = 1; i < sizeof(clientsIngame) - 1; i++) {
 		if(clientsIngame[i]){
@@ -232,19 +233,19 @@ public int GetClientID(char name[33])
 }
 
 public void TimedVisible(int player_id){
+	sec = 3;
+	
 	if(visTimer != null)
 	{
 		delete visTimer;
 		visTimer = null;
 		
-		bugfix = true;
+		//bugfix = true;
 	}
 	
 	MakePlayerVisible(player_id);
 	visTimer = CreateTimer(1.0, Timer_Visible, _, TIMER_REPEAT);
-	bugfix = false;
-	
-	int sec = 3;
+	//bugfix = false;
 	
 	for (int i = 1; i < sizeof(clientsIngame); i++)
     {
@@ -258,9 +259,9 @@ public void TimedVisible(int player_id){
 
 public Action Timer_Visible(Handle timer)
 {
-    static int sec = 2;
-    
-    if (sec <= 0 && !bugfix) 
+	sec--;
+	
+    if (sec <= 0) 
     {
     	MakePlayerInvisible(playerInvis);
     	
@@ -274,7 +275,7 @@ public Action Timer_Visible(Handle timer)
    		
    		PrintHintText(playerInvis, "Du bist nun wieder unsichtbar!");
     	
-		sec = 2;
+		sec = 3;
         visTimer = null;
         
         return Plugin_Stop;
@@ -288,8 +289,6 @@ public Action Timer_Visible(Handle timer)
 	    }
    	}
    	PrintHintText(playerInvis, "Du bist nun nun sichtbar für: %d Sekunden", sec);
-   	
-   	sec--;
  
 	return Plugin_Continue;
 }
