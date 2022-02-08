@@ -54,30 +54,6 @@ public void OnPluginStart()
 	
 	RegAdminCmd("sm_mode", GameMode, ADMFLAG_GENERIC);
 	RegAdminCmd("mode", GameMode, ADMFLAG_GENERIC);
-	
-	RegConsoleCmd("timertest", TimerTest);
-}
-
-public Action TimerTest(int client, int args){
-	CreateTimer(1.0, Timer_PrintMessageFiveTimes, _, TIMER_REPEAT);
-}
-
-public Action Timer_PrintMessageFiveTimes(Handle timer)
-{
-    // Create a global variable visible only in the local scope (this function).
-    static int numPrinted = 10;
- 
-    if (numPrinted == 0) 
-    {
-    	ServerCommand("say Countdown finished!");
-        numPrinted = 10;
-        return Plugin_Stop;
-    }
- 
-    ServerCommand("say Countdown: %d", numPrinted);
-    numPrinted--;
- 
-    return Plugin_Continue;
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -163,9 +139,12 @@ public Action GameInvis(int client, int args)
 	
 	int invisId = GetClientID(invisName);
 	
-	if(clientsIngame[invisId]){
+	if(clientsIngame[invisId])
+	{
 		playerInvis = invisId;
-	}else{
+	}
+	else
+	{
 		ReplyToCommand(client, "Invalid Player Name");
 		return Plugin_Handled;
 	}
@@ -190,6 +169,7 @@ public Action GameInvis(int client, int args)
 	CS_SetClientClanTag(playerInvis, "INVISIBLE");
 	
 	ServerCommand("mp_restartgame 1");
+	ServerCommand("mp_damage_vampiric_amount 1");
 	
 	CS_SetClientClanTag(playerInvis, "INVISIBLE");
 	
@@ -239,13 +219,10 @@ public void TimedVisible(int player_id){
 	{
 		delete visTimer;
 		visTimer = null;
-		
-		//bugfix = true;
 	}
 	
 	MakePlayerVisible(player_id);
 	visTimer = CreateTimer(1.0, Timer_Visible, _, TIMER_REPEAT);
-	//bugfix = false;
 	
 	for (int i = 1; i < sizeof(clientsIngame); i++)
     {
