@@ -21,14 +21,19 @@ int playerInvis = -1;
 Handle visTimer;
 int sec = 3;
 
+//Globals DontMiss
+int shotsRemaining[MAXPLAYERS + 1];
+
 enum Gamemode{
 	standard,
-	invis
+	invis,
+	dontmiss
 }
 Gamemode pluginMode = standard;
 
-char ga_cGamemodes[1][2][64] =  { 
-	{ "Invis", "1v5, where the solo player is invisible" } 
+char ga_cGamemodes[2][2][64] =  { 
+	{ "Invis", "1v5, where the solo player is invisible" },
+	{"DontMiss", "Dont miss more than x shots... or you're out!"}	
 };
 
 public Plugin myinfo = 
@@ -81,6 +86,40 @@ public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast){
 	}
 }
 
+public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	if(pluginMode == dontmiss)
+	{
+		PrintToChatAll("Verbleibende Misses: ");
+		for (int i = 0; i < sizeof(shotsRemaining); i++)
+		{
+			if(clientsIngame[i])
+			{
+				char name[33]; 
+				GetClientName(i, name, sizeof(name));
+				
+				PrintToChatAll("%s: %d", name, shotsRemaining[i]);
+			}
+		}
+	}
+}
+
+public void OnWeaponFire(Event event, const char[] name, bool dontBroadcast){
+	if(pluginMode == dontmiss)
+	{
+		int attacker = GetClientOfUserId(event.GetInt("userid"));
+		shotsRemaining[attacker]--;
+	}
+}
+
+public void OnPlayerHurt(Event event, const char[] name, bool dontBroadcast){
+	if(pluginMode == dontmiss)
+	{
+		int attacker = GetClientOfUserId(event.GetInt("attacker"));
+		shotsRemaining[attacker]++;	
+	}
+}
+
 public Action PlayerInfo(int client, int args)
 {	
 	ReplyToCommand(client, "\nPLAYER INFO\n");
@@ -115,6 +154,10 @@ public Action GameMode(int client, int args)
 	if(StrEqual(game, "invis"))
 	{
 		GameInvis(client, args);
+	}
+	else if(StrEqual(game, "dontmiss"))
+	{
+		GameDontMiss(client, args);
 	}
 	else
 	{
@@ -173,6 +216,31 @@ public Action GameInvis(int client, int args)
 	
 	CS_SetClientClanTag(playerInvis, "INVISIBLE");
 	
+	
+	return Plugin_Handled;
+}
+
+public Action GameDontMiss(int client, int args)
+{
+	pluginMode = dontmiss;
+	
+	ResetValues();
+	
+	char maxshots[8];
+	GetCmdArg(2, maxshots, sizeof(maxshots));
+	
+	int i_maxshots = StringToInt(maxshots);
+	
+	for (int i = 0; i < sizeof(shotsRemaining); i++)
+	{
+		shotsRemaining[i] = i_maxshots;
+	}
+	
+	HookEvent("round_start", OnRoundStart);
+	HookEvent("weapon_fire", OnWeaponFire);
+	HookEvent("player_hurt", OnPlayerHurt);
+	
+	ServerCommand("mp_restartgame 1");
 	
 	return Plugin_Handled;
 }
