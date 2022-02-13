@@ -23,6 +23,7 @@ int sec = 3;
 
 //Globals DontMiss
 int shotsRemaining[MAXPLAYERS + 1];
+bool firstexec = true;
 
 enum Gamemode{
 	standard,
@@ -31,9 +32,9 @@ enum Gamemode{
 }
 Gamemode pluginMode = standard;
 
-char ga_cGamemodes[2][2][64] =  { 
-	{ "Invis", "1v5, where the solo player is invisible" },
-	{"DontMiss", "Dont miss more than x shots... or you're out!"}	
+char ga_cGamemodes[2][2][128] =  { 
+	{ "Invis", "1v5, where the solo player is invisible. \nUsage: (sm_)mode invis Playername" },
+	{"DontMiss", "Don't miss more than x shots... or you're out! \nUsage: (sm_)mode dontmiss x"}	
 };
 
 public Plugin myinfo = 
@@ -93,12 +94,12 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		PrintToChatAll("Verbleibende Misses: ");
 		for (int i = 0; i < sizeof(shotsRemaining); i++)
 		{
-			if(clientsIngame[i])
+			if(clientsIngame[i] && !IsClientSourceTV(i) && !IsClientReplay(i))
 			{
-				char name[33]; 
-				GetClientName(i, name, sizeof(name));
+				char cname[33]; 
+				GetClientName(i, cname, sizeof(cname));
 				
-				PrintToChatAll("%s: %d", name, shotsRemaining[i]);
+				PrintToChatAll("%s: %d", cname, shotsRemaining[i]);
 			}
 		}
 	}
@@ -107,16 +108,41 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 public void OnWeaponFire(Event event, const char[] name, bool dontBroadcast){
 	if(pluginMode == dontmiss)
 	{
-		int attacker = GetClientOfUserId(event.GetInt("userid"));
-		shotsRemaining[attacker]--;
+		char weapon[32]; 
+		event.GetString("weapon", weapon, sizeof(weapon));
+		
+		if(DM_IsWeapon(weapon))
+		{
+			int attacker = GetClientOfUserId(event.GetInt("userid"));
+			shotsRemaining[attacker]--;
+			CreateTimer(0.1, DM_KickPlayer, attacker);
+		}
+	}
+}
+
+public Action DM_KickPlayer(Handle timer, int client)
+{
+	if(shotsRemaining[client] < 1)
+	{
+		ChangeClientTeam(client, CS_TEAM_SPECTATOR);
+	}
+	else if(shotsRemaining[client] < 10)
+	{
+		PrintHintText(client, "Achtung! Du hast nur noch %d Schüsse!", shotsRemaining[client]);
 	}
 }
 
 public void OnPlayerHurt(Event event, const char[] name, bool dontBroadcast){
 	if(pluginMode == dontmiss)
 	{
-		int attacker = GetClientOfUserId(event.GetInt("attacker"));
-		shotsRemaining[attacker]++;	
+		char weapon[32];
+		event.GetString("weapon", weapon, sizeof(weapon));
+		
+		if(DM_IsWeapon(weapon))
+		{
+			int attacker = GetClientOfUserId(event.GetInt("attacker"));
+			shotsRemaining[attacker]++;	
+		}
 	}
 }
 
@@ -162,8 +188,8 @@ public Action GameMode(int client, int args)
 	else
 	{
 		ReplyToCommand(client, "\n%s is an invalid or not yet implemented game.", game);
-		ReplyToCommand(client, "The currently implemented Games are:\n");
-		for (int i = 1; i < sizeof(ga_cGamemodes); i++)
+		ReplyToCommand(client, "The currently implemented games are:\n");
+		for (int i = 0; i < sizeof(ga_cGamemodes); i++)
 		{
 			ReplyToCommand(client, "\x01%s", ga_cGamemodes[i][0]);
 			ReplyToCommand(client, "%s\n", ga_cGamemodes[i][1]);
@@ -224,7 +250,7 @@ public Action GameDontMiss(int client, int args)
 {
 	pluginMode = dontmiss;
 	
-	ResetValues();
+	firstexec = false;
 	
 	char maxshots[8];
 	GetCmdArg(2, maxshots, sizeof(maxshots));
@@ -246,6 +272,15 @@ public Action GameDontMiss(int client, int args)
 }
 
 public void ResetValues(){
+
+	if(!firstexec)
+	{
+		UnhookEvent("round_start", OnRoundStart);
+		UnhookEvent("weapon_fire", OnWeaponFire);
+		UnhookEvent("player_hurt", OnPlayerHurt);
+	}
+	
+	
 	playerInvis = -1;
 	pluginMode = standard;
 	sec = 3;
@@ -345,4 +380,13 @@ public void MakePlayerInvisible(int player_id)
 public void MakePlayerVisible(int player_id)
 {
 	FakeClientCommandEx(player_id, "ent_fire !self addoutput \"rendermode 1\"");
+}
+
+public bool DM_IsWeapon(char[] weapon)
+{
+	if(StrEqual(weapon, "weapon_knife") || StrEqual(weapon, "weapon_knife_t") || StrEqual(weapon, "weapon_hegrenade") || StrEqual(weapon, "weapon_smokegrenade") || StrEqual(weapon, "weapon_flashbang") || StrEqual(weapon, "weapon_decoy") || StrEqual(weapon, "weapon_molotov") || StrEqual(weapon, "weapon_incgrenade"))
+	{
+		return false;
+	}
+	return true;
 }
