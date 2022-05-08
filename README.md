@@ -22,7 +22,7 @@ This command can be seen in action on [YouTube](https://youtu.be/y4z7QDn2DLE "In
 
 ## DontMiss (standalone)
 A mode where every player can only miss a certain amount of bullets. For every missed bullet the responsible player loses a certain amount of health and a certain amount of points depending on the weapon's chest damage from 500 units.  
-The player loses a third of this damage in health and a tenth of this damage in points. If a player reaches 0 points, he instantly dies and will also do so at the start of each round, thus he is rendered useless until the end of the round.
+The player loses a third of this damage in health and a tenth of this damage in points. If a player reaches 0 points, they instantly dies and will also do so at the start of each round, thus they are rendered useless until the end of the match.
 
 Command `dontmiss x`, where x is the amount of points one player gets in the beginning of the round.
 This command can be seen in action on [YouTube](https://youtu.be/TKBtF15Ht8c "DontMiss on YT (German)").
